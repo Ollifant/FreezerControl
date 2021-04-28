@@ -30,8 +30,8 @@ Adafruit_SSD1306 display(128, 64);  // Create display
 #include <OneWire.h>
 #include <DallasTemperature.h>
  
-// Data wire is plugged into pin 7 on the Arduino
-#define ONE_WIRE_BUS 7
+// Data wire is plugged into pin D4 on the Arduino
+#define ONE_WIRE_BUS 4
  
 // Setup a oneWire instance to communicate with any OneWire devices 
 // (not just Maxim/Dallas temperature ICs)
@@ -41,23 +41,30 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 
 // Addresses of 3 DS18B20s
+// Freezer Sensor
 uint8_t sensor1[8] = { 0x28, 0xE3, 0xE2, 0x56, 0x05, 0x00, 0x00, 0xD3 };
-// uint8_t sensor2[8] = { 0x28, 0x61, 0x64, 0x12, 0x3C, 0x7C, 0x2F, 0x27 };
-// uint8_t sensor3[8] = { 0x28, 0x61, 0x64, 0x12, 0x3F, 0xFD, 0x80, 0xC6 };
+// Outsite Sensor
+uint8_t sensor2[8] = { 0x28, 0x72, 0xF0, 0x55, 0x05, 0x00, 0x00, 0x22 };
+// Insite Sensor
+// uint8_t sensor3[8] = {  };
 
-float Temperature;
+float TemperatureFreez;
+float TemperatureOut;
+float TemperatureIn;
 char Text[20];
-char Temp[10];
+char TempFreez[10];
+char TempOut[10];
+char TempIn[10];
 const int TargetTemp = 24;
 const int Hysteresis = 1;
 
 // Pin for LEDs
 const int LEDred = 8;
 const int LEDgreen = 9;
-const int LEDblue = 10;
+const int LEDblue =10;
 
-// Buzzer to pin 6
-const int Buzzer = 6;
+// Buzzer to pin D5
+const int Buzzer = 5;
 
 // Pin for Relays
 const int Relay1 = 2;
@@ -100,22 +107,31 @@ void setup()  // Start of setup
 
 }  // End of setup
 
-void DisplayTemperature(float Temp1){
+void DisplayTemperature(float Temp1, float Temp2){
   // Convert Temperature into a string, so we can change the text alignment to the right:
   // It can be also used to add or remove decimal numbers.
   // Convert float to a string:
-  dtostrf(Temp1, 3, 1, Temp);  // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+  dtostrf(Temp1, 3, 1, TempFreez);  // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+  dtostrf(Temp2, 3, 1, TempOut);
 
   display.clearDisplay();  // Clear the display so we can refresh
   // display.setFont(&FreeMonoBold12pt7b);  // Set a custom font
   display.setFont(&FreeMono9pt7b);  // Set a custom font
   display.setTextSize(0);  // Set text size. We are using a custom font so you should always use the text size of 0
 
-  // Print text:
+  // Print text 1:
+  // display.setCursor(5, 15);  // (x,y)
+  // display.println("Freezer");  // Text or value to print
+  strcpy(Text, "TempF: ");
+  strcat(Text, TempFreez);
   display.setCursor(5, 15);  // (x,y)
-  display.println("Freezer");  // Text or value to print
-  strcpy(Text, "Temp: ");
-  strcat(Text, Temp);
+  display.println(Text);  // Text or value to print
+
+  // Print text 2:
+  // display.setCursor(5, 55);  // (x,y)
+  // display.println("Outside");  // Text or value to print
+  strcpy(Text, "TempO: ");
+  strcat(Text, TempOut);
   display.setCursor(5, 35);  // (x,y)
   display.println(Text);  // Text or value to print
   
@@ -135,21 +151,19 @@ void DisplayError(){
   display.display();  // Print everything we set previously
 }
 
-float ReadTemperature(){
+float ReadTemperature(DeviceAddress deviceAddress){
   // call sensors.requestTemperatures() to issue a global temperature
   // request to all devices on the bus
   sensors.requestTemperatures(); // Send the command to get temperatures
-  return sensors.getTempCByIndex(0); // Why "byIndex"? 
-    // You can have more than one IC on the same bus. 
-    // 0 refers to the first IC on the wire
+  return sensors.getTempC(deviceAddress);
 }
 
 
 void loop()  // Start of loop
 {
-  Temperature = ReadTemperature();
+  TemperatureFreez = ReadTemperature(sensor1);
 
-  while (Temperature < -100){
+  while (TemperatureFreez < -100){
     // No temperature sensor
     DisplayError();
     digitalWrite(LEDred, LOW);
@@ -162,23 +176,26 @@ void loop()  // Start of loop
     digitalWrite(Buzzer, LOW);
     digitalWrite(LEDblue, LOW);
     delay(500); 
-    Temperature = ReadTemperature();
+    TemperatureFreez = ReadTemperature(sensor1);
   }
-  if (Temperature < TargetTemp){
+  if (TemperatureFreez < TargetTemp){
     // turn the pin off by making the voltage LOW
     digitalWrite(Relay1, LOW); 
     digitalWrite(LEDgreen, HIGH);
     digitalWrite(LEDred, LOW);
   } else {
-    if (Temperature > (TargetTemp + Hysteresis)){
+    if (TemperatureFreez > (TargetTemp + Hysteresis)){
       // turn the pin on by making the voltage HIGH
       digitalWrite(Relay1, HIGH); 
       digitalWrite(LEDred, HIGH);
       digitalWrite(LEDgreen, LOW);
     }
   }
+
+  TemperatureOut = ReadTemperature(sensor2);
+  // TemperatureIn = ReadTemperature(sensor3);
   
-  DisplayTemperature(Temperature);
+  DisplayTemperature(TemperatureFreez, TemperatureOut);
 
   delay(1000);
 
