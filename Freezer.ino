@@ -30,8 +30,8 @@ Adafruit_SSD1306 display(128, 64);  // Create display
 #include <OneWire.h>
 #include <DallasTemperature.h>
  
-// Data wire is plugged into pin D4 on the Arduino
-#define ONE_WIRE_BUS 4
+// Data wire is plugged into pin D5 on the Arduino
+#define ONE_WIRE_BUS 5
  
 // Setup a oneWire instance to communicate with any OneWire devices 
 // (not just Maxim/Dallas temperature ICs)
@@ -55,16 +55,11 @@ char Text[20];
 char TempFreez[10];
 char TempOut[10];
 char TempIn[10];
-const int TargetTemp = 24;
+const int TargetTemp = 25;
 const int Hysteresis = 1;
 
-// Pin for LEDs
-const int LEDred = 8;
-const int LEDgreen = 9;
-const int LEDblue =10;
-
-// Buzzer to pin D5
-const int Buzzer = 5;
+// Buzzer to pin D4
+const int Buzzer = 4;
 
 // Pin for Relays
 const int Relay1 = 2;
@@ -99,11 +94,6 @@ void setup()  // Start of setup
 
   // Set buzzer - pin as output
   pinMode(Buzzer, OUTPUT); 
-
-  // Set LED - pins as output
-  pinMode(LEDred, OUTPUT); 
-  pinMode(LEDgreen, OUTPUT); 
-  pinMode(LEDblue, OUTPUT); 
 
 }  // End of setup
 
@@ -166,29 +156,21 @@ void loop()  // Start of loop
   while (TemperatureFreez < -100){
     // No temperature sensor
     DisplayError();
-    digitalWrite(LEDred, LOW);
-    digitalWrite(LEDgreen, LOW);
     // Buzzer on
-    digitalWrite(Buzzer, HIGH); 
-    digitalWrite(LEDblue, HIGH); 
     delay(500);  
     // Buzzer off
-    digitalWrite(Buzzer, LOW);
-    digitalWrite(LEDblue, LOW);
     delay(500); 
     TemperatureFreez = ReadTemperature(sensor1);
   }
   if (TemperatureFreez < TargetTemp){
-    // turn the pin off by making the voltage LOW
-    digitalWrite(Relay1, LOW); 
-    digitalWrite(LEDgreen, HIGH);
-    digitalWrite(LEDred, LOW);
+    // turn the pin on by making the voltage HIGH
+    // Relay switches OFF !!!
+    digitalWrite(Relay1, HIGH); 
   } else {
     if (TemperatureFreez > (TargetTemp + Hysteresis)){
-      // turn the pin on by making the voltage HIGH
-      digitalWrite(Relay1, HIGH); 
-      digitalWrite(LEDred, HIGH);
-      digitalWrite(LEDgreen, LOW);
+      // turn the pin off by making the voltage LOW
+      // Relay switches ON !!!
+      digitalWrite(Relay1, LOW); 
     }
   }
 
