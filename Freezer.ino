@@ -52,9 +52,6 @@ float TemperatureFreez;
 float TemperatureOut;
 float TemperatureIn;
 char Text[20];
-char TempFreez[10];
-char TempOut[10];
-char TempIn[10];
 const int TargetTemp = 25;
 const int Hysteresis = 1;
 
@@ -63,6 +60,15 @@ const int Buzzer = 4;
 
 // Pin for Relays
 const int Relay1 = 2;
+
+// Pin for Solar Power
+const int SolarPin = 0;
+// Solar Power Indicator
+bool SolarPower = false;
+int SolarValue;
+unsigned long SolarTime = 0;
+unsigned long SolarOld;
+unsigned long SolarNew;
 
 void setup()  // Start of setup
 {                
@@ -94,16 +100,16 @@ void setup()  // Start of setup
 
   // Set buzzer - pin as output
   pinMode(Buzzer, OUTPUT); 
+  // Relay switches OFF !!!
+  digitalWrite(Relay1, HIGH);
 
 }  // End of setup
 
-void DisplayTemperature(float Temp1, float Temp2){
-  // Convert Temperature into a string, so we can change the text alignment to the right:
-  // It can be also used to add or remove decimal numbers.
-  // Convert float to a string:
-  dtostrf(Temp1, 3, 1, TempFreez);  // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
-  dtostrf(Temp2, 3, 1, TempOut);
-
+void DisplayTemperature(float Temp1, float Temp2, bool solarFlag, unsigned long solarDuration){
+  int Seconds;
+  int Minutes;
+  int Hours;
+  
   display.clearDisplay();  // Clear the display so we can refresh
   // display.setFont(&FreeMonoBold12pt7b);  // Set a custom font
   display.setFont(&FreeMono9pt7b);  // Set a custom font
@@ -112,18 +118,40 @@ void DisplayTemperature(float Temp1, float Temp2){
   // Print text 1:
   // display.setCursor(5, 15);  // (x,y)
   // display.println("Freezer");  // Text or value to print
-  strcpy(Text, "TempF: ");
-  strcat(Text, TempFreez);
+  snprintf(Text, sizeof(Text), "TempF: %d.1", Temp1);
   display.setCursor(5, 15);  // (x,y)
   display.println(Text);  // Text or value to print
 
   // Print text 2:
   // display.setCursor(5, 55);  // (x,y)
   // display.println("Outside");  // Text or value to print
-  strcpy(Text, "TempO: ");
-  strcat(Text, TempOut);
+  snprintf(Text, sizeof(Text), "TempO: %d.1", Temp2);
   display.setCursor(5, 35);  // (x,y)
   display.println(Text);  // Text or value to print
+
+  // Print text 3:
+  display.setCursor(5, 55);  // (x,y)
+  if (solarFlag == true) {
+    // Convert milliseconds to seconds
+    solarDuration = solarDuration / 1000;
+    // Calculate hours
+    Hours = solarDuration / 3600;
+    // Get rest
+    solarDuration = solarDuration % 3600;
+    // Calculate Minutes
+    Minutes = solarDuration / 60;
+    // Get rest
+    solarDuration = solarDuration % 60;
+    Seconds = solarDuration;
+    if (Seconds < 10){
+      snprintf(Text, sizeof(Text), "Solar: %i:0%i", Minutes, Seconds);
+    }else {
+     snprintf(Text, sizeof(Text), "Solar: %i:%i", Minutes, Seconds); 
+    }
+    display.println(Text);
+  } else {
+    display.println("Solar: off");
+  }
   
   display.display();  // Print everything we set previously
 }
@@ -157,8 +185,10 @@ void loop()  // Start of loop
     // No temperature sensor
     DisplayError();
     // Buzzer on
+    digitalWrite(Buzzer, HIGH);
     delay(500);  
     // Buzzer off
+    digitalWrite(Buzzer, LOW);
     delay(500); 
     TemperatureFreez = ReadTemperature(sensor1);
   }
@@ -176,8 +206,23 @@ void loop()  // Start of loop
 
   TemperatureOut = ReadTemperature(sensor2);
   // TemperatureIn = ReadTemperature(sensor3);
+
+  // Test Solar Power
+  SolarValue= analogRead(SolarPin);
+  if (SolarValue > 200){
+    // Solar Power On
+    SolarPower = true;
+    SolarNew = millis();
+    SolarTime = SolarTime + SolarNew - SolarOld;
+    SolarOld = SolarNew;
+  } else {
+    // Solar Power Off
+    SolarPower = false;
+    SolarOld = millis();
+  }
   
-  DisplayTemperature(TemperatureFreez, TemperatureOut);
+  
+  DisplayTemperature(TemperatureFreez, TemperatureOut, SolarPower, SolarTime);
 
   delay(1000);
 
