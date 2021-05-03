@@ -51,6 +51,12 @@ uint8_t sensor2[8] = { 0x28, 0x72, 0xF0, 0x55, 0x05, 0x00, 0x00, 0x22 };
 float TemperatureFreez;
 float TemperatureOut;
 float TemperatureIn;
+float MaxTempFreez = 0;
+float MinTempFreez = 0;
+float MaxTempOut = 0;
+float MinTempOut = 0;
+float MaxTempIn = 0;
+float MinTempIn = 0;
 char Text[20];
 const int TargetTemp = 25;
 const int Hysteresis = 1;
@@ -105,10 +111,11 @@ void setup()  // Start of setup
 
 }  // End of setup
 
-void DisplayTemperature(float Temp1, float Temp2, bool solarFlag, unsigned long solarDuration){
+void DisplayTemperature(){
   int Seconds;
   int Minutes;
   int Hours;
+  unsigned long solarDuration;
   
   display.clearDisplay();  // Clear the display so we can refresh
   // display.setFont(&FreeMonoBold12pt7b);  // Set a custom font
@@ -118,20 +125,21 @@ void DisplayTemperature(float Temp1, float Temp2, bool solarFlag, unsigned long 
   // Print text 1:
   // display.setCursor(5, 15);  // (x,y)
   // display.println("Freezer");  // Text or value to print
-  snprintf(Text, sizeof(Text), "TempF: %d.1", Temp1);
+  snprintf(Text, sizeof(Text), "TempF: %d.1", TemperatureFreez);
   display.setCursor(5, 15);  // (x,y)
   display.println(Text);  // Text or value to print
 
   // Print text 2:
   // display.setCursor(5, 55);  // (x,y)
   // display.println("Outside");  // Text or value to print
-  snprintf(Text, sizeof(Text), "TempO: %d.1", Temp2);
+  snprintf(Text, sizeof(Text), "TempO: %d.1", TemperatureOut);
   display.setCursor(5, 35);  // (x,y)
   display.println(Text);  // Text or value to print
 
   // Print text 3:
   display.setCursor(5, 55);  // (x,y)
-  if (solarFlag == true) {
+  if (SolarPower == true) {
+    solarDuration = SolarTime;
     // Convert milliseconds to seconds
     solarDuration = solarDuration / 1000;
     // Calculate hours
@@ -176,6 +184,21 @@ float ReadTemperature(DeviceAddress deviceAddress){
   return sensors.getTempC(deviceAddress);
 }
 
+void TestSolarPower(){
+  SolarValue= analogRead(SolarPin);
+  if (SolarValue > 200){
+    // Solar Power On
+    SolarPower = true;
+    SolarNew = millis();
+    SolarTime = SolarTime + SolarNew - SolarOld;
+    SolarOld = SolarNew;
+  } else {
+    // Solar Power Off
+    SolarPower = false;
+    SolarOld = millis();
+  }
+}
+
 
 void loop()  // Start of loop
 {
@@ -204,25 +227,34 @@ void loop()  // Start of loop
     }
   }
 
-  TemperatureOut = ReadTemperature(sensor2);
-  // TemperatureIn = ReadTemperature(sensor3);
-
-  // Test Solar Power
-  SolarValue= analogRead(SolarPin);
-  if (SolarValue > 200){
-    // Solar Power On
-    SolarPower = true;
-    SolarNew = millis();
-    SolarTime = SolarTime + SolarNew - SolarOld;
-    SolarOld = SolarNew;
-  } else {
-    // Solar Power Off
-    SolarPower = false;
-    SolarOld = millis();
+  if (TemperatureFreez > MaxTempFreez){
+    // New max. temperature
+    MaxTempFreez = TemperatureFreez;
+  } else if (TemperatureFreez < MinTempFreez){
+    // New min. temperature
+    MinTempFreez = TemperatureFreez;
   }
+
+  TemperatureOut = ReadTemperature(sensor2);
+  if (TemperatureOut > MaxTempOut){
+    // New max. temperature
+    MaxTempOut = TemperatureOut;
+  } else if (TemperatureOut < MinTempOut){
+    // New min. temperature
+    MinTempOut = TemperatureOut;
+  }
+  /* TemperatureIn = ReadTemperature(sensor3);
+    if (TemperatureIn > MaxTempIn){
+    // New max. temperature
+    MaxTempIn = TemperatureIn;
+  } else if (TemperatureIn < MinTempIn){
+    // New min. temperature
+    MinTempIn = TemperatureIn;
+   */
+
+  TestSolarPower();
   
-  
-  DisplayTemperature(TemperatureFreez, TemperatureOut, SolarPower, SolarTime);
+  DisplayTemperature();
 
   delay(1000);
 
