@@ -57,9 +57,9 @@ float MaxTempOut = 0;
 float MinTempOut = 0;
 float MaxTempIn = 0;
 float MinTempIn = 0;
-char Text[20];
-const int TargetTemp = 25;
-const int Hysteresis = 1;
+char Text[100];
+const int TargetTemp = 7;
+const float Hysteresis = 0.5;
 
 // Buzzer to pin D4
 const int Buzzer = 4;
@@ -116,6 +116,7 @@ void DisplayTemperature(){
   int Minutes;
   int Hours;
   unsigned long solarDuration;
+  char tText[100];
   
   display.clearDisplay();  // Clear the display so we can refresh
   // display.setFont(&FreeMonoBold12pt7b);  // Set a custom font
@@ -123,16 +124,16 @@ void DisplayTemperature(){
   display.setTextSize(0);  // Set text size. We are using a custom font so you should always use the text size of 0
 
   // Print text 1:
-  // display.setCursor(5, 15);  // (x,y)
-  // display.println("Freezer");  // Text or value to print
-  snprintf(Text, sizeof(Text), "TempF: %d.1", TemperatureFreez);
+  // workaround to display float numbers
+  dtostrf(TemperatureFreez, 3, 1, tText);  // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+  snprintf(Text,sizeof(Text),"TempF: %s", tText);
   display.setCursor(5, 15);  // (x,y)
   display.println(Text);  // Text or value to print
 
   // Print text 2:
-  // display.setCursor(5, 55);  // (x,y)
-  // display.println("Outside");  // Text or value to print
-  snprintf(Text, sizeof(Text), "TempO: %d.1", TemperatureOut);
+  dtostrf(TemperatureOut, 3, 1, tText);  // (<variable>,<amount of digits we are going to use>,<amount of decimal digits>,<string name>)
+  snprintf(Text,sizeof(Text),"TempO: %s", tText);
+  // snprintf(Text, sizeof(Text), "TempO: %d.1", TemperatureOut);
   display.setCursor(5, 35);  // (x,y)
   display.println(Text);  // Text or value to print
 
@@ -151,10 +152,10 @@ void DisplayTemperature(){
     // Get rest
     solarDuration = solarDuration % 60;
     Seconds = solarDuration;
-    if (Seconds < 10){
-      snprintf(Text, sizeof(Text), "Solar: %i:0%i", Minutes, Seconds);
+    if (Minutes < 10){
+      snprintf(Text, sizeof(Text), "Solar: %i:0%i", Hours, Minutes);
     }else {
-     snprintf(Text, sizeof(Text), "Solar: %i:%i", Minutes, Seconds); 
+     snprintf(Text, sizeof(Text), "Solar: %i:%i", Hours, Minutes); 
     }
     display.println(Text);
   } else {
@@ -253,7 +254,6 @@ void loop()  // Start of loop
    */
 
   TestSolarPower();
-  
   DisplayTemperature();
 
   delay(1000);
