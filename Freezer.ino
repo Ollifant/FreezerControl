@@ -66,9 +66,10 @@ const int Buzzer = 4;
 
 // Pin for Relays
 const int Relay1 = 2;
+const int RelaySolarIn = 3;
 
 // Pin for Solar Power
-const int SolarPin = 0;
+const int SolarPin = 2;
 // Solar Power Indicator
 bool SolarPower = false;
 int SolarValue;
@@ -99,10 +100,15 @@ void setup()  // Start of setup
   // Start up the Dallas Temperature IC Control Library
   sensors.begin();
 
-  // initialize digital pin as an output.
+  // initialize digital pins as an output.
   pinMode(Relay1, OUTPUT);
-  // turn the pin off by making the voltage LOW
-  digitalWrite(Relay1, LOW);    
+  pinMode(RelaySolarIn, OUTPUT);
+  // turn the pin off by making the voltage HIGH
+  digitalWrite(Relay1, HIGH);   
+  // the relay will be switches on when the system is running
+  // wen the system is not running the relay will prevent power at the input pin
+  // turn the pin on by making the voltage LOW
+  digitalWrite(RelaySolarIn, LOW);  
 
   // Set buzzer - pin as output
   pinMode(Buzzer, OUTPUT); 
