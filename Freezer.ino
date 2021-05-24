@@ -44,10 +44,10 @@ const int xRow2 = 70;
 const int xRow3 = 140;
 const int xSolar = 45;
 
-const uint16_t y1 = 22;
-const uint16_t y2 = 45;
-const uint16_t y3 = 68;
-const uint16_t y4 = 96;
+const uint16_t y_1 = 22;
+const uint16_t y_2 = 45;
+const uint16_t y_3 = 68;
+const uint16_t y_4 = 96;
 const uint16_t wTime = 65;
 uint16_t xTime;
 
@@ -178,26 +178,26 @@ void displayInitialState(float tempIn, float tempOut, float tempFreez)
     display.fillScreen(GxEPD_WHITE);
     display.setTextColor(GxEPD_BLACK);
     // Headline
-    display.setCursor(xHead, y1);
+    display.setCursor(xHead, y_1);
     display.print(Temperature);
     // Title
-    display.setCursor(xIn, y2);
+    display.setCursor(xIn, y_2);
     display.print("In");
-    display.setCursor(xOut, y2);
+    display.setCursor(xOut, y_2);
     display.print("Out");
     // Values
-    display.setCursor(xFreez, y2);
+    display.setCursor(xFreez, y_2);
     display.print("Freez");
-    display.setCursor(xLeft, y3);
+    display.setCursor(xLeft, y_3);
     display.print(valIn);
-    display.setCursor(xMiddle, y3);
+    display.setCursor(xMiddle, y_3);
     display.print(valOut);
-    display.setCursor(xRight, y3);
+    display.setCursor(xRight, y_3);
     display.print(valFreez);
     // Solar Power
-    display.setCursor(xSolar, y4);
+    display.setCursor(xSolar, y_4);
     display.print(textSolar);
-    display.setCursor(xTime, y4);
+    display.setCursor(xTime, y_4);
     display.print("00:00");
 
     display.writeLine(1,4, 210, 4, GxEPD_BLACK);
@@ -218,12 +218,12 @@ void displayTemperature(double v, int middleRow)
   display.getTextBounds(valueString, 0, 0, &tbx, &tby, &tbw, &tbh);
   xMiddle = middleRow - (tbw/2);
     
-  display.setPartialWindow(int(middleRow-(wRows/2)), int(y3-(fHight/2)-5), wRows, fHight);
+  display.setPartialWindow(int(middleRow-(wRows/2)), int(y_3-(fHight/2)-5), wRows, fHight);
   display.firstPage();
   do
   {
     display.fillScreen(GxEPD_WHITE);
-    display.setCursor(xMiddle, y3);
+    display.setCursor(xMiddle, y_3);
     display.print(valueString);
   }
   while (display.nextPage());
@@ -271,12 +271,12 @@ void displaySolarTime(){
       snprintf(tText, sizeof(tText), "%s:%s", tHours, tMinutes);
       
       display.setTextColor(GxEPD_BLACK);
-      display.setPartialWindow(xTime, int(y4-(fHight/2)), wTime, fHight);
+      display.setPartialWindow(xTime, int(y_4-(fHight/2)), wTime, fHight);
       display.firstPage();
       do
       {
         display.fillScreen(GxEPD_WHITE);
-        display.setCursor(xTime, y4);
+        display.setCursor(xTime, y_4);
         display.print(tText);
       }
       while (display.nextPage());
@@ -336,16 +336,16 @@ void CheckSolarPower(){
 
   if (solarPowerOld != SolarPower){
     // State of the solar system changed
-    display.setPartialWindow((xSolar-20), int(y4-(fHight/2)-5), 15, fHight);
+    display.setPartialWindow((xSolar-20), int(y_4-(fHight/2)-5), 15, fHight);
     display.firstPage();
     do
     {
       display.fillScreen(GxEPD_WHITE);
       if (SolarPower){
-        display.fillCircle ((xSolar-15), (y4 - 5), 5, GxEPD_RED);
+        display.fillCircle ((xSolar-15), (y_4 - 5), 5, GxEPD_RED);
       }
       else{
-        display.drawCircle ((xSolar-15), (y4 - 5), 5, GxEPD_BLACK);
+        display.drawCircle ((xSolar-15), (y_4 - 5), 5, GxEPD_BLACK);
       }
     }
     while (display.nextPage());
